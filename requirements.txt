@@ -1,3 +1,4 @@
 Flask==0.12.2
 proxmoxer==0.2.5
 pytest==3.1.2
+requests==2.14.2
