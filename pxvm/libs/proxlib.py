@@ -79,3 +79,9 @@ class Prox:
             self.control_vm(new_vmid, 'start')
 
         return {'config': self.prox.nodes(node).lxc(new_vmid).config.get(), 'ip': ip.split('/')[0]}
+
+    def get_tasks(self, vmid=None):
+        tasks = self.prox.cluster.tasks.get()
+        if vmid:
+            return [x for x in sorted(tasks, key=lambda k: str(k['starttime']), reverse=True) if x['id'] == str(vmid)]
+        return sorted(tasks, key=lambda k: str(k['starttime']), reverse=True)
