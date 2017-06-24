@@ -7,6 +7,12 @@ class Prox:
     def __init__(self, proxmox_host, password, user: str = 'root@pam', verify_ssl=True, port=443):
         self.prox = ProxmoxAPI(proxmox_host, user=user, password=password, port=port, verify_ssl=verify_ssl)
 
+    def get_version(self):
+        return self.prox.version.get()
+
+    def get_nodes(self):
+        return self.prox.nodes.get()
+
     def get_vms(self, status=None):
         nodes = self.prox.cluster.config.nodes.get()
         vms = []
