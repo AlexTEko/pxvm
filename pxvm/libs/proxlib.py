@@ -1,15 +1,6 @@
 import random
 from proxmoxer import ProxmoxAPI
 
-DEFAULT_TEMPLATE = 'local:vztmpl/ubuntu-16.04-standard_16.04-1_amd64.tar.gz'
-DEFAULT_GW = '10.160.18.1'
-DEFAULT_IP = '10.160.18.{}/24'
-DEFAULT_PASSWORD = '12345'
-SSH_KEYS = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtbCa4zzsFlQgPmghFLR0FPEwD0XUKWdsQ9UZCVTLBNMtOxkd77aqeLT/f29ICGMnf' \
-           'MDV6SfFaxN/uWJukQ0onPTNHTQwyJsxGZdrKBByhS0jBp4SXfoU6KH1gA/m8CykC0WSBzdJRT/1RemYAuC+AzklLthEO/F8gnC97QAWm' \
-           'ix7govUrJWFQZ9k8pgybB3YUFu3SSqt/Q5PGfxFW8jmkpxFWi6DrBa4Yfuu7oP7d0p4+nYHbhTRPO0E1sXzZPBijXaVOzFJybgB/pYhX' \
-           '8JcpBrVPd3LffVIPfeFiC8b4dk3cX3ITkuzDQn423BzEOfrnlHj2R+WouvXKaHFM+bld root@delta\n'
-
 
 class Prox:
 
@@ -47,8 +38,8 @@ class Prox:
         vmid = int(vmid) + 1
         return vmid
 
-    def __generate_ip(self):
-        all_ips = [DEFAULT_IP.format(x) for x in range(201, 251)]
+    def __generate_ip(self, ip_mask):
+        all_ips = [ip_mask.format(x) for x in range(201, 251)]
         ips = []
         vms = self.get_vms_configs()
         for vm in vms:
@@ -67,19 +58,18 @@ class Prox:
     def control_vm(self, vmid, status, node='pve'):
         self.prox.nodes(node).lxc(vmid).status.post(status)
 
-    def create_lxc(self, hostname, node='pve', ostemplate=DEFAULT_TEMPLATE,
-                   storage='tank', memory=512, swap=512, cores=1, rootfs='8', password=DEFAULT_PASSWORD, online=True,
-                   ip=None, bridge='vmbr0', gw=DEFAULT_GW):
+    def create_lxc(self, ostemplate, ip, gw, ssh, hostname=None, node='pve',
+                   storage='tank', memory=512, swap=512, cores=1, rootfs='8', online=True, bridge='vmbr0'):
         new_vmid = self.__get_vm_id()
         if ip == 'dhcp':
             net0 = 'name=eth0,bridge={},ip=dhcp'.format(bridge)
         else:
-            ip = self.__generate_ip()
+            ip = self.__generate_ip(ip)
             net0 = 'name=eth0,bridge={},ip={},gw={}'.format(bridge, ip, gw)
-        self.prox.nodes(node).lxc.create(**{'vmid':new_vmid, 'ostemplate': ostemplate, 'hostname': hostname,
-                                            'storage': storage, 'memory': memory, 'swap': swap, 'cores': cores, 'rootfs': rootfs,
-                                            'ssh-public-keys': SSH_KEYS, 'net0': net0})
+        self.prox.nodes(node).lxc.create(**{'vmid': new_vmid, 'ostemplate': ostemplate, 'hostname': hostname,
+                                            'storage': storage, 'memory': memory, 'swap': swap, 'cores': cores,
+                                            'rootfs': rootfs, 'ssh-public-keys': ssh, 'net0': net0})
         if online:
             self.control_vm(new_vmid, 'start')
 
-        print({'hostname': hostname, 'ip': ip.split('/')[0]})
+        return {'config': self.prox.nodes(node).lxc(new_vmid).config.get(), 'ip': ip.split('/')[0]}
