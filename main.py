@@ -1,9 +1,17 @@
 import os
 import config
+import random
 from flask import Flask, request, json
 from pxvm.libs.proxlib import Prox
 
 app = Flask(__name__)
+
+
+def generate_random_hostname():
+    alphabet = ['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india','juliet','kilo','lima','mike',
+                'november','oscar','papa','quebec','romeo','sierra','tango','uniform','victor','whiskey','xray','yankee','zulu']
+    return '{}-{}-{}'.format(alphabet[random.randint(0, len(alphabet) - 1)], alphabet[random.randint(0, len(alphabet) - 1)],
+                             random.randrange(00, 99))
 
 
 def _make_response(data):
@@ -54,7 +62,7 @@ def lxc():
             data = request.json
             hostname = data['hostname']
         except (TypeError, KeyError):
-            hostname = None
+            hostname = generate_random_hostname()
         # return _make_response({'foo':'bar'})
         return _make_response(_request().create_lxc(hostname=hostname, ostemplate=config.DEFAULT_TEMPLATE,
                                                     ip=config.DEFAULT_IP, gw=config.DEFAULT_GW, ssh=config.SSH_KEYS))
