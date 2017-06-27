@@ -53,7 +53,7 @@ def lxc():
         try:
             data = request.json
             hostname = data['hostname']
-        except TypeError:
+        except (TypeError, KeyError):
             hostname = None
         # return _make_response({'foo':'bar'})
         return _make_response(_request().create_lxc(hostname=hostname, ostemplate=config.DEFAULT_TEMPLATE,
