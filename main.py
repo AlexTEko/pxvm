@@ -17,10 +17,15 @@ def _make_response(data):
 
 def _request():
     try:
-        user, password = request.headers.get('Authorization').split(':')
+        header = request.headers.get('Authorization')
+        if not header:
+            print('No Authorization header')
+        else:
+            user, password = header.split(':')
+            return Prox(config.PX_HOST, user=user, password=password)
     except (ValueError, AttributeError) as e:
-        return e
-    return Prox(config.PX_HOST, user=user, password=password)
+        print(e)
+
 
 
 @app.route("/api/version", methods=['GET'])
@@ -45,8 +50,14 @@ def task(vmid):
 @app.route("/api/lxc", methods=['GET', 'POST'])
 def lxc():
     if request.method == 'POST':
-        return _make_response(_request().create_lxc(ostemplate=config.DEFAULT_TEMPLATE, ip=config.DEFAULT_IP,
-                                            gw=config.DEFAULT_GW, ssh=config.SSH_KEYS))
+        try:
+            data = request.json
+            hostname = data['hostname']
+        except TypeError:
+            hostname = None
+        # return _make_response({'foo':'bar'})
+        return _make_response(_request().create_lxc(hostname=hostname, ostemplate=config.DEFAULT_TEMPLATE,
+                                                    ip=config.DEFAULT_IP, gw=config.DEFAULT_GW, ssh=config.SSH_KEYS))
     if request.method == 'GET':
         return _make_response(_request().get_vms())
 
