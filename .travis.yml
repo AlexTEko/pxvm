@@ -7,6 +7,9 @@ language: python
 python:
   - "3.6"
 
+before_install:
+  - sh .travis/tests_prepare.sh
+
 script:
   - python3 -m pytest -v
 
