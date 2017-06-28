@@ -50,6 +50,7 @@ def nodes():
 def tasks():
     return _make_response(_request().get_tasks())
 
+
 @app.route("/api/tasks/<int:vmid>", methods=['GET'])
 def task(vmid):
     return _make_response(_request().get_tasks(vmid))
@@ -68,6 +69,16 @@ def lxc():
                                                     ip=config.DEFAULT_IP, gw=config.DEFAULT_GW, ssh=config.SSH_KEYS))
     if request.method == 'GET':
         return _make_response(_request().get_vms())
+
+
+@app.route("/api/lxc/<int:vmid>", methods=['DELETE'])
+def lxc_delete(vmid):
+    if request.method == 'DELETE':
+        resp = _request().delete_lxc(vmid)
+        if 'vzdestroy' in resp:
+            return _make_response({'data': '{} destroyed'.format(vmid)})
+        else:
+            return _make_response({'data': 'something wrong'})
 
 
 if __name__ == "__main__":

@@ -80,6 +80,9 @@ class Prox:
 
         return {'config': self.prox.nodes(node).lxc(new_vmid).config.get(), 'ip': ip.split('/')[0]}
 
+    def delete_lxc(self, vmid, node='pve'):
+        return self.prox.nodes(node).lxc.delete(vmid)
+
     def get_tasks(self, vmid=None):
         tasks = self.prox.cluster.tasks.get()
         if vmid:
